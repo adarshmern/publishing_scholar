@@ -8,6 +8,8 @@ import GroupedBarChart from '../../components/Charts/UserBasedChart';
 import FileBased from '../../components/Charts/FileBasedChart';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUserBasedData } from '../../redux/apiSlice';
+import Filter from '../../components/modal/Filter';
+import {FaFilter} from 'react-icons/fa'
 
 function Upload() {
     const dataUser = useSelector(state=>state.api.data)
@@ -21,6 +23,7 @@ function Upload() {
     const [filename, setFilename] = useState('')
     const [fileData, setFileData] = useState([])
     const [flag, setFlag] = useState(false)
+    const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
         getAllUsers()
@@ -108,6 +111,14 @@ function Upload() {
         setFilename(e.target.value);
     }
 
+    function handleOpenModal() {
+        setShowModal(true);
+      }
+    
+      function handleCloseModal() {
+        setShowModal(false);
+      }
+
     return (
         <>
 
@@ -125,31 +136,37 @@ function Upload() {
                     </form>
                 </div>
             </div>
-            <br /><br />
+            <br />
+            <div className="col">
+                <button style={{backgroundColor:"blue"}} onClick={()=>setShowModal(true)}><FaFilter />Filter</button>
+            </div>
+            {showModal&&<Filter 
+            users={users} 
+            handleuserchange={handleuserchange} 
+            onClose={handleCloseModal}
+            handlestartDt={handlestartDt}
+            handleendDt={handleendDt}
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            />}
+            <br />
+            <div className="row"></div>
             <div className="card" style={{ width: "100%" }}>
-                <input defaultValue={startDate} type="date" onChange={(e) => handlestartDt(e)} />
-                <input defaultValue={endDate} type="date" onChange={(e) => handleendDt(e)} />
                 <BarChartComponent data={defaultG} />
             </div>
             <div className="card" style={{ width: "100%" }}>
-                <select name="username" id="username" onChange={(e) => handleuserchange(e)}>
-                    <option value="">Select user</option>
-                    {users.map((username, index) => (
-                        <option key={index} value={username}>
-                            {username}
-                        </option>
-                    ))}
-                </select>
                {dataUser&& <GroupedBarChart data={dataUser} />}
             </div>
-            <form onSubmit={getFIleBasedGraph}>
+            {/* <form onSubmit={getFIleBasedGraph}>
                 <input type="text" name="" id="" onChange={e => handlefilenamechange(e)} />
                 <button type="submit">VIEW CHART</button>
-            </form>
+            </form> */}
 
-            <div className="card" style={{ width: "100%" }}>
+            {/* <div className="card" style={{ width: "100%" }}>
                 <FileBased data={fileData} />
-            </div>
+            </div> */}
         </>
     );
 }

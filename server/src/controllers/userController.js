@@ -345,7 +345,7 @@ const getGraph = async (req, res) => {
             }
         ]);
         result.forEach((elem) => {
-            elem.efficiency = (elem.pageCount / (200 / 480) / (elem.duration / (60000))) * 100
+            elem.efficiency = ((elem.pageCount / (200 / 480) / (elem.duration / (60000))) * 100).toFixed(2)
             elem.date = `${new Date(elem.date).getDate()}/` + `${new Date(elem.date).getMonth()}`;
         })
         res.status(200).json(result);
@@ -542,7 +542,7 @@ const getUserProcessData = async (req, res) => {
         const groupedData = {};
 
         result.forEach(entry => {
-            const date = new Date(entry.date).toISOString().split('T')[0]; 
+            const date = new Date(entry.date).toISOString().split('T')[0];
 
             if (!groupedData[date]) {
                 groupedData[date] = {
@@ -647,36 +647,78 @@ const getFileProcessData = async (req, res) => {
     }
 }
 
-
-const getDateEfficiencyGraphData = async (req, res) => {
+const getProcessWiseData = async (req, res) => {
     try {
-        const { username, startDate, endDate } = req.query;
+        const { startDate, endDate } = req.query;
 
-        const manuscript = await RawData.findOne({
-            'process.user': username,
-            'process.startTime': { $gte: startDate, $lte: endDate }
-        });
-        if (!manuscript) {
-            return res.status(404).json({ error: 'No data found for the specified criteria' });
-        }
+        const startDateObj = new Date(startDate);
+        const endDateObj = new Date(endDate);
+        endDateObj.setHours(23, 59, 59, 999);
 
-        const result = [];
-
-        manuscript.process.forEach((process) => {
-            if (process.startTime >= startDate && process.startTime <= endDate) {
-                result.push({
-                    date: process.startTime,
-                    efficiency: process.efficiency
-                });
+        const result = await RawData.aggregate([
+            {
+                $match: {
+                    "completion_Date": { $gte: startDateObj, $lte: endDateObj }
+                }
+            },
+            {
+                $unwind: "$process"
+            },
+            {
+                $group: {
+                    _id: {
+                        date: { $dateToString: { format: "%Y-%m-%d", date: "$completion_Date" } },
+                        processName: "$process.processName"
+                    },
+                    averageEfficiency: { $avg: "$process.efficiency" }
+                }
+            },
+            {
+                $group: {
+                    _id: "$_id.date",
+                    efficiencies: {
+                        $push: {
+                            processName: "$_id.processName",
+                            averageEfficiency: "$averageEfficiency"
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    date: "$_id",
+                    efficiencies: 1
+                }
+            },
+            {
+                $sort:{
+                    date:1
+                }
             }
-        });
+        ])
 
-        return res.json(result);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: 'Internal server error' });
+        //   const formattedResult = result.map(item => {
+        //     const formattedItem = { date: item.date };
+        //     item.efficiencies.forEach(processEfficiency => {
+        //       formattedItem[processEfficiency.processName.toLowerCase().replace(' ', '')] = processEfficiency.averageEfficiency;
+        //     });
+        //     return formattedItem;
+        //   });
+
+        const formattedResult = result.map(item => {
+            const formattedItem = { date: item.date };
+            item.efficiencies.forEach(processEfficiency => {
+                formattedItem[processEfficiency.processName.toLowerCase().replace(' ', '')] = parseFloat(processEfficiency.averageEfficiency.toFixed(2));
+            });
+            return formattedItem;
+        });
+        res.status(200).json(formattedResult)
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).json({ error: err.message });
     }
-};
+}
 
 module.exports = {
     insertData,
@@ -688,5 +730,5 @@ module.exports = {
     getUsers,
     getUserProcessData,
     getFileProcessData,
-    getDateEfficiencyGraphData
+    getProcessWiseData
 }

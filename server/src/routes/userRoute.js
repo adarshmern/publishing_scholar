@@ -1,5 +1,5 @@
 const {Router}= require('express');
-const { insertData, displayData, addData, getGraph, getUserGraph, getFileGraph, getUsers, getUserProcessData, getFileProcessData, getDateEfficiencyGraphData } = require('../controllers/userController');
+const { insertData, displayData, addData, getGraph, getUserGraph, getFileGraph, getUsers, getUserProcessData, getFileProcessData, getDateEfficiencyGraphData, getProcessWiseData } = require('../controllers/userController');
 const router=Router();
 
 router.post('/add',insertData);
@@ -20,7 +20,8 @@ router.get('/fileBasedGraph',getFileProcessData);
 
 router.get('/users',getUsers);
 
-router.get('/graphtwo',getDateEfficiencyGraphData)
+router.get('/defaultgraph',getProcessWiseData);
+
 
 
 module.exports=router;
