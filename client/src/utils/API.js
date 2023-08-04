@@ -10,3 +10,4 @@ export const FILE_GRAPH='/fileGraph'
 
 export const USER_GRAPH='/userBasedGraph'
 export const FILE_BASED_GRAPH='/fileBasedGraph'
+export const DEFAULT_SECOND='/defaultgraph'

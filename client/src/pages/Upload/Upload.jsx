@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as XLSX from "xlsx";
 import axios from '../../utils/axios';
-import { ADD_DATA, INSERT_DATA, DEFAULT_GRAPH, LIST_USERS, USER_BASED_GRAPH, FILE_GRAPH ,USER_GRAPH,FILE_BASED_GRAPH} from '../../utils/API';
+import { ADD_DATA, INSERT_DATA, DEFAULT_GRAPH, LIST_USERS, USER_BASED_GRAPH, FILE_GRAPH ,USER_GRAPH,FILE_BASED_GRAPH,DEFAULT_SECOND} from '../../utils/API';
 import DisplayChart from '../../components/Home/Display';
 import BarChartComponent from '../../components/Charts/DefaultChart';
 import GroupedBarChart from '../../components/Charts/UserBasedChart';
@@ -36,14 +36,14 @@ function Upload() {
     },[userBasedGraphData])
 
     async function getDefaultGraph() {
-        await axios.get(`${DEFAULT_GRAPH}?startDate=${startDate}&endDate=${endDate}`).then((res) => {
-            console.log(res.data);
+        axios.get(`${DEFAULT_GRAPH}?startDate=${startDate}&endDate=${endDate}`).then((res) => {
+            // console.log(res.data);
             setDefaultG(res.data);
         })
     }
 
     async function getAllUsers() {
-        await axios.get(LIST_USERS).then((res) => {
+        axios.get(LIST_USERS).then((res) => {
             setUsers(res.data);
         })
     }
@@ -79,12 +79,20 @@ function Upload() {
 
 
     async function getUserGroupedData() {
-        axios.get(`${USER_GRAPH}?username=${user}&startDate=${startDate}&endDate=${endDate}`).then(res => {
-            console.log(res.data);
-            // setUserBasedGraphData(()=>{return res.data});
-            console.log(dataUser);
-            dispatch(setUserBasedData({ data: res.data }))
-        })
+        if(user!==''){
+            axios.get(`${USER_GRAPH}?username=${user}&startDate=${startDate}&endDate=${endDate}`).then(res => {
+                console.log(res.data);
+                console.log(dataUser);
+                dispatch(setUserBasedData({ data: res.data }))
+            })
+        }else{
+            axios.get(`${DEFAULT_SECOND}?startDate=${startDate}&endDate=${endDate}`).then(res => {
+                console.log(res.data);
+                console.log(dataUser);
+                dispatch(setUserBasedData({ data: res.data }))
+            })
+        }
+        
     }
 
     async function getFIleBasedGraph(e) {
@@ -159,14 +167,6 @@ function Upload() {
             <div className="card" style={{ width: "100%" }}>
                {dataUser&& <GroupedBarChart data={dataUser} />}
             </div>
-            {/* <form onSubmit={getFIleBasedGraph}>
-                <input type="text" name="" id="" onChange={e => handlefilenamechange(e)} />
-                <button type="submit">VIEW CHART</button>
-            </form> */}
-
-            {/* <div className="card" style={{ width: "100%" }}>
-                <FileBased data={fileData} />
-            </div> */}
         </>
     );
 }

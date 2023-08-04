@@ -655,6 +655,9 @@ const getProcessWiseData = async (req, res) => {
         const endDateObj = new Date(endDate);
         endDateObj.setHours(23, 59, 59, 999);
 
+        const processOrder = ['copyEditing', 'epr', 'preEditing']; 
+
+
         const result = await RawData.aggregate([
             {
                 $match: {
@@ -713,7 +716,21 @@ const getProcessWiseData = async (req, res) => {
             });
             return formattedItem;
         });
-        res.status(200).json(formattedResult)
+        formattedResult.forEach(elem=>{
+            console.log(elem.epr,typeof(elem.epr));
+            if(elem.epr==Infinity){
+                elem.epr=0;
+            }
+        })
+        const reorderedData = formattedResult.map(item => {
+            return {
+                "date": item.date,
+                "copyEditing": item.copyediting,
+                "epr": item.epr,
+                "preEditing": item.preediting
+            };
+        });
+        res.status(200).json(reorderedData)
     } catch (err) {
         console.log(err.message);
         res.status(500).json({ error: err.message });
