@@ -23,16 +23,17 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setUserBasedData } from '../../redux/apiSlice';
 import Filter from '../../components/modal/Filter';
 import { FaFilter } from 'react-icons/fa'
+import { setFileName } from '../../redux/filenameSlice';
 
 function Upload() {
     const dataUser = useSelector(state => state.api.data)
     const dispatch = useDispatch()
-    const [defaultG, setDefaultG] = useState([])
     const [startDate, setStartDate] = useState('2023-06-01');
     const [endDate, setEndDate] = useState('2023-06-30');
     const [users, setUsers] = useState([]);
     const [user, setUSer] = useState('');
-    const [key, setkey] = useState('')
+    // const [key, setkey] = useState('')
+    const key = useSelector(state=>state.name)
     const [fileData, setFileData] = useState([])
     const [flag, setFlag] = useState(false)
     const [showModal, setShowModal] = useState(false);
@@ -198,9 +199,12 @@ function Upload() {
     }
 
     function handleFilenameChange(e) {
-        setkey(e.target.value);
+        // setkey(e.target.value);
+        dispatch(setFileName(e.target.value))
         console.log(key);
         if(key==='') setselectFilename(true)
+
+        else setselectFilename(false)
         setFlag(prev => !prev);
     }
 

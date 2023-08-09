@@ -9,7 +9,7 @@ const filenameSlice = createSlice({
     reducers: {
         setFileName: (state, action) => {
             console.log(state, action);
-            state = action.payload;
+            return action.payload; 
         }
     },
 });
