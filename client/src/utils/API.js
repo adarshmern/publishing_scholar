@@ -31,3 +31,7 @@ export const FILE_SEARCH_GRAPH_ONE_USER='/filterOneUser'
 export const FILE_SEARCH_GRAPH_TWO='/searchprocess'
 export const FILE_SEARCH_GRAPH_TWO_USER='/searchprocessuser'
 
+export const GGRAPH_ONE='/graphOne'
+export const GGRAPH_TWO='/graphTwo'
+
+

@@ -1,101 +1,26 @@
+const {
+    dateWiseGraph,
+    dateWiseGraphWithUser,
+    dateWiseProcessGraph,
+    dateWiseProcessGraphWithUser,
+    dateWiseFileSearchGraph,
+    dateWiseFileSearchGraphWithUser,
+    dateWiseFileSearchProcessGraph,
+    dateWiseFileSearchProcessGraphWithUser,
+    completionDateWiseGraph,
+    completionDateWiseGraphWithUser,
+    completionDateWiseProcessGraphWithUser,
+    completionDateWiseProcessGraph,
+    completionDateWiseFileSearchGraph,
+    completionDateWiseFileSearchGraphWithUser,
+    completionDateWiseFileSearchProcessGraph,
+    completionDateWiseFileSearchProcessGraphWithUser
+} = require('../../helpers/userHelper');
 const RawData = require('../../models/manuSchema');
 
 function timeToMinutes(timeString) {
     const [hours, minutes, seconds] = timeString.split(":").map(Number);
     return hours * 60 + minutes + seconds / 60;
-}
-
-const insertData = async (req, res) => {
-    try {
-        console.log(req.body);
-        let {
-            'File Name': filename,
-            'Page count': pg_count,
-            'Import Date': imp_date,
-            'Job Study By': job_study_by,
-            'JobStudy Start Date': js_dt,
-            'JobStudy Start Time': js_tm,
-            'JobStudy Completed Date': js_edt,
-            'JobStudy End Time': js_et,
-            'Structuring By': structuring_by,
-            'Structuring Start Date': st_dt,
-            'Structuring Start Time': st_tm,
-            'Structuring Completed Date': st_edt,
-            'Structuring End Time': st_et,
-            'PE By': pre_editing_by,
-            'Pre-Editing Start Date': pe_dt,
-            'Pre-Editing Start Time': pe_tm,
-            'Pre-Editing Completed Date': pe_edt,
-            'Pre-Editing End Time': pe_et,
-            'Pre-Editing Productive Time': pe_prod_time,
-            'CE By': copy_editing_by,
-            'CopyEditing Start Date': ce_dt,
-            'CopyEditing Start Time': ce_tm,
-            'CopyEditing Completed Date': ce_edt,
-            'CopyEditing End Time': ce_et,
-            'CopyEditing Productive Time': ce_prod_time,
-            'EPR By': epr_by,
-            'EPR Start Date': epr_dt,
-            'EPR Start Time': epr_tm,
-            'EPR Completed Date': epr_edt,
-            'EPR End Time': epr_et,
-            'Archival Date': arch_date
-        } = req.body
-        const peExist = await PEModel.findOne({ filename });
-        const ceExist = await CEModel.findOne({ filename });
-        const eprExist = await EPRModel.findOne({ filename });
-        if (peExist || ceExist || eprExist) return res.status(400).json({ message: "filename already entered" });
-        const newPE = new PEModel({
-            filename,
-            import: imp_date,
-            start: pe_dt + ' ' + pe_tm,
-            end: pe_edt + ' ' + pe_et,
-            user: pre_editing_by,
-            completion_Date: arch_date
-        })
-        const pe_minutes = timeToMinutes(pe_prod_time);
-        newPE.efficiency = (((pg_count / (200 / 480)) / pe_minutes) * 100).toFixed(2)
-        newPE.duration = newPE.end - newPE.start,
-            await newPE.save()
-        const newCE = new CEModel({
-            filename,
-            import: imp_date,
-            start: ce_dt + ' ' + ce_tm,
-            end: ce_edt + ' ' + ce_et,
-            user: copy_editing_by,
-            completion_Date: arch_date
-        })
-        const ce_minutes = timeToMinutes(ce_prod_time);
-        newCE.efficiency = (((pg_count / (200 / 480)) / ce_minutes) * 100).toFixed(2)
-        newCE.duration = newCE.end - newCE.start;
-        await newCE.save();
-        const newEPR = new EPRModel({
-            filename,
-            import: imp_date,
-            start: epr_dt + ' ' + epr_tm,
-            end: epr_edt + ' ' + epr_et,
-            user: epr_by,
-            completion_Date: arch_date
-        })
-        newEPR.duration = newEPR.end - newEPR.start;
-        await newEPR.save();
-
-        const processes = [];
-        if (pe_dt) processes.push('PreEditing');
-        if (ce_dt) processes.push('CopyEditing');
-        if (epr_dt) processes.push('EPR');
-
-        const newManuscript = new ManuscriptModel({
-            filename,
-            process: processes,
-            importDate: imp_date
-        });
-        await newManuscript.save();
-        res.status(200).json('respo');
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ error: err.message })
-    }
 }
 
 function calculateEfficiency(standardPages, standardTimeMinutes, actualPages, actualTimeMinutes) {
@@ -252,343 +177,51 @@ const getUsers = async (req, res) => {
 }
 
 
-const graphDefDayOne = async (req, res) => {
+const getGraphOne = async (req, res) => {
     try {
-        const startDate = new Date(req.query.startingDate);
-        const endDate = new Date(req.query.endingDate);
-        const result = await RawData.aggregate([
-            {
-                $unwind: '$process'
-            },
-            {
-                $match: {
-                    'process.endTime': {
-                        $gte: startDate,
-                        $lte: endDate
-                    }
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        date: { $dateToString: { format: '%Y-%m-%d', date: '$process.endTime' } },
-                    },
-                    pageCount: { $sum: '$process.page_count' },
-                    processes: { $push: '$process' },
-                    filenames: { $addToSet: '$filename' },
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: '$_id.date',
-                    efficiency: {
-                        $divide: [
-                            { $multiply: ['$pageCount', 2.4] },
-                            { $sum: '$processes.process_productive_time' }
-                        ]
-                    },
-                    pageCount: 1,
-                    filenames: 1,
-                }
-            },
-            {
-                $project: {
-                    date: 1,
-                    efficiency: {
-                        $divide: [
-                            { $trunc: { $multiply: ['$efficiency', 100] } },
-                            100
-                        ]
-                    },
-                    pageCount: 1,
-                    filenames: 1,
-                    workbookCount: { $size: '$filenames' },
-                }
-            },
-            {
-                $sort: {
-                    date: 1
-                }
-            }
-        ]);
-        res.json(result)
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ error: err.message });
-    }
-}
-
-const graphDefDayOneUser = async (req, res) => {
-    try {
-        const startDate = new Date(req.query.startingDate);
-        const endDate = new Date(req.query.endingDate);
-        const user = req.query.username;
-        const result = await RawData.aggregate([
-            {
-                $unwind: '$process'
-            },
-            {
-                $match: {
-                    'process.endTime': {
-                        $gte: startDate,
-                        $lte: endDate
-                    },
-                    'process.user': user 
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        date: { $dateToString: { format: '%Y-%m-%d', date: '$process.endTime' } },
-                    },
-                    pageCount: { $sum: '$process.page_count' },
-                    processes: { $push: '$process' },
-                    filenames: { $addToSet: '$filename' }, 
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: '$_id.date',
-                    efficiency: {
-                        $divide: [
-                            { $multiply: ['$pageCount', 2.4] },
-                            { $sum: '$processes.process_productive_time' }
-                        ]
-                    },
-                    pageCount: 1,
-                    filenames: 1,
-                }
-            },
-            {
-                $project: {
-                    date: 1,
-                    efficiency: {
-                        $divide: [
-                            { $trunc: { $multiply: ['$efficiency', 100] } },
-                            100
-                        ]
-                    },
-                    pageCount: 1,
-                    filenames:1,
-                    workbookCount: { $size: '$filenames' },
-                }
-            },
-            {
-                $sort: {
-                    date: 1
-                }
-            }
-        ])
-
-        res.json(result)
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ error: err.message });
-    }
-}
-
-const graphDefDayOneProcess = async (req, res) => {
-    try {
-        const startDate = new Date(req.query.startingDate);
-        const endDate = new Date(req.query.endingDate);
-        const result = await RawData.aggregate([
-            {
-                $match: {
-                    "process.endTime": { $gte: startDate, $lte: endDate },
-                },
-            },
-            {
-                $unwind: "$process",
-            },
-            {
-                $group: {
-                    _id: {
-                        date: { $dateToString: { format: "%Y-%m-%d", date: "$process.endTime" } },
-                        processName: "$process.processName",
-                    },
-                    totalPageCount: { $sum: "$process.page_count" },
-                    totalEfficiency: {
-                        $sum: {
-                            $divide: [
-                                { $multiply: ["$process.page_count", 2.4] },
-                                "$process.process_productive_time",
-                            ],
-                        },
-                    },
-                    filenames: { $addToSet: "$filename" },
-                },
-            },
-            {
-                $group: {
-                    _id: "$_id.date",
-                    data: {
-                        $push: {
-                            processName: "$_id.processName",
-                            // efficiency: { $avg: "$totalEfficiency" },
-                            efficiency: "$totalEfficiency" ,
-                            pageCount: "$totalPageCount",
-                            filenames: "$filenames",
-                            workbookCount: { $sum: { $size: "$filenames" } },
-                        },
-                    },
-
-                },
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: "$_id",
-                    data: 1,
-                },
-            },
-            {
-                $sort: { date: 1 },
-            },
-        ]);
-
-
-        res.json(result)
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ error: err.message });
-    }
-}
-
-const graphDefDayOneProcessUser = async (req, res) => {
-    try {
-        const startDate = new Date(req.query.startingDate);
-        const endDate = new Date(req.query.endingDate);
-        const user = req.query.username;
-        const result = await RawData.aggregate([
-            {
-                $match: {
-                    "process.endTime": { $gte: startDate, $lte: endDate },
-                    "process.user": user
-                }
-            },
-            {
-                $unwind: "$process"
-            },
-            {
-                $group: {
-                    _id: {
-                        date: { $dateToString: { format: "%Y-%m-%d", date: "$process.endTime" } },
-                        processName: "$process.processName"
-                    },
-                    totalPageCount: { $sum: "$process.page_count" },
-                    totalEfficiency: {
-                        $sum: {
-                            $divide: [
-                                { $multiply: ["$process.page_count", 2.4] },
-                                "$process.process_productive_time"
-                            ]
-                        }
-                    },
-                    filenames: { $addToSet: "$filename" },
-                }
-            },
-            {
-                $group: {
-                    _id: "$_id.date",
-                    data: {
-                        $push: {
-                            processName: "$_id.processName",
-                            // efficiency: { $avg: "$totalEfficiency" },
-                            efficiency: "$totalEfficiency" ,
-                            pageCount: "$totalPageCount",
-                            filenames: "$filenames",
-                            workbookCount: { $sum: { $size: "$filenames" } },
-                        }
-                    },
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: "$_id",
-                    data: 1
-                }
-            },
-            {
-                $sort: { date: 1 }
-            }
-        ])
-        res.json(result)
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ error: err.message });
-    }
-}
-
-const fileSearchFilterGraphOne = async (req, res) => {
-    try {
-        const startDate = new Date(req.query.startingDate);
-        const endDate = new Date(req.query.endingDate);
-        const key = req.query.key; 
-        const result = await RawData.aggregate([
-            {
-                $unwind: '$process'
-            },
-            {
-                $match: {
-                    'process.endTime': {
-                        $gte: startDate,
-                        $lte: endDate
-                    }
-                }
-            },
-            {
-                $match: {
-                    filename: { $regex: `^${key}`, $options: 'i' } 
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        date: { $dateToString: { format: '%Y-%m-%d', date: '$process.endTime' } },
-                    },
-                    pageCount: { $sum: '$process.page_count' },
-                    processes: { $push: '$process' },
-                    filenames: { $addToSet: '$filename' },
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: '$_id.date',
-                    efficiency: {
-                        $divide: [
-                            { $multiply: ['$pageCount', 2.4] },
-                            { $sum: '$processes.process_productive_time' }
-                        ]
-                    },
-                    pageCount: 1,
-                    filenames: 1,
-                }
-            },
-            {
-                $project: {
-                    date: 1,
-                    efficiency: {
-                        $divide: [
-                            { $trunc: { $multiply: ['$efficiency', 100] } },
-                            100
-                        ]
-                    },
-                    pageCount: 1,
-                    filenames: 1,
-                    workbookCount: { $size: '$filenames' },
-                }
-            },
-            {
-                $sort: {
-                    date: 1
-                }
-            }
-        ]);
-        res.json(result);
+        const { processRangeStart, processRangeEnd, completionRangeStart, completionRangeEnd, user, key } = req.body;
+        console.log(req.body);
+        console.log(processRangeStart, processRangeEnd, completionRangeStart, completionRangeEnd, user, key);
+        if (completionRangeStart == undefined && completionRangeEnd == undefined && user == undefined && key == undefined) {
+            const result = await dateWiseGraph(processRangeStart, processRangeEnd);
+            console.log('hi', result);
+            return res.status(200).json(result);
+        }
+        if (completionRangeStart == undefined && completionRangeEnd == undefined && key == undefined) {
+            const result = await dateWiseGraphWithUser(processRangeStart, processRangeEnd, user);
+            console.log(result);
+            return res.status(200).json(result);
+        }
+        if (completionRangeStart == undefined && completionRangeEnd == undefined && user == undefined) {
+            const result = await dateWiseFileSearchGraph(processRangeStart, processRangeEnd, key);
+            console.log(result);
+            return res.status(200).json(result);
+        }
+        if (completionRangeStart == undefined && completionRangeEnd == undefined) {
+            const result = await dateWiseFileSearchGraphWithUser(processRangeStart, processRangeEnd, key, user);
+            console.log(result);
+            return res.status(200).json(result);
+        }
+        if (processRangeStart == undefined && processRangeEnd == undefined && user == undefined && key == undefined) {
+            const result = await completionDateWiseGraph(completionRangeStart, completionRangeEnd);
+            console.log(result);
+            return res.status(200).json(result);
+        }
+        if (processRangeStart == undefined && processRangeEnd == undefined && key == undefined) {
+            const result = await completionDateWiseGraphWithUser(completionRangeStart, completionRangeEnd, user);
+            console.log('hj', result);
+            return res.status(200).json(result);
+        }
+        if (processRangeStart == undefined && processRangeEnd == undefined && user == undefined) {
+            const result = await completionDateWiseFileSearchGraph(completionRangeStart, completionRangeEnd, key);
+            console.log(result);
+            return res.status(200).json(result);
+        }
+        if (processRangeStart == undefined && processRangeEnd == undefined) {
+            const result = await completionDateWiseFileSearchGraphWithUser(completionRangeStart, completionRangeEnd, key, user);
+            console.log(result);
+            return res.status(200).json(result);
+        }
 
     } catch (err) {
         console.log(err.message);
@@ -596,500 +229,51 @@ const fileSearchFilterGraphOne = async (req, res) => {
     }
 }
 
-const fileSearchFilterGraphOneUser = async (req, res) => {
+const getGraphTwo = async (req, res) => {
     try {
-        const startDate = new Date(req.query.startingDate);
-        const endDate = new Date(req.query.endingDate);
-        const key = req.query.key; 
-        const user = req.query.username;
-        const result = await RawData.aggregate([
-            {
-                $unwind: '$process'
-            },
-            {
-                $match: {
-                    'process.endTime': {
-                        $gte: startDate,
-                        $lte: endDate
-                    },
-                    "process.user":user
-                }
-            },
-            {
-                $match: {
-                    filename: { $regex: `^${key}`, $options: 'i' } 
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        date: { $dateToString: { format: '%Y-%m-%d', date: '$process.endTime' } },
-                    },
-                    pageCount: { $sum: '$process.page_count' },
-                    processes: { $push: '$process' },
-                    filenames: { $addToSet: '$filename' },
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: '$_id.date',
-                    efficiency: {
-                        $divide: [
-                            { $multiply: ['$pageCount', 2.4] },
-                            { $sum: '$processes.process_productive_time' }
-                        ]
-                    },
-                    pageCount: 1,
-                    filenames: 1,
-                }
-            },
-            {
-                $project: {
-                    date: 1,
-                    efficiency: {
-                        $divide: [
-                            { $trunc: { $multiply: ['$efficiency', 100] } },
-                            100
-                        ]
-                    },
-                    pageCount: 1,
-                    filenames: 1,
-                    workbookCount: { $size: '$filenames' },
-                }
-            },
-            {
-                $sort: {
-                    date: 1
-                }
-            }
-        ]);
-        res.json(result);
+        const { processRangeStart, processRangeEnd, completionRangeStart, completionRangeEnd, user, key } = req.body;
+        console.log(req.body);
+        if (completionRangeStart == undefined && completionRangeEnd == undefined && user == undefined && key == undefined) {
+            const result = await dateWiseProcessGraph(processRangeStart, processRangeEnd);
+            console.log('hello', result);
+            return res.status(200).json(result);
+        }
+        if (completionRangeStart == undefined && completionRangeEnd == undefined && key == undefined) {
+            const result = await dateWiseProcessGraphWithUser(processRangeStart, processRangeEnd, user);
+            console.log(result);
+            return res.status(200).json(result);
+        }
+        if (completionRangeStart == undefined && completionRangeEnd == undefined && user == undefined) {
+            const result = await dateWiseFileSearchProcessGraph(processRangeStart, processRangeEnd, key);
+            console.log(result);
+            return res.status(200).json(result);
+        }
+        if (completionRangeStart == undefined && completionRangeEnd == undefined) {
+            const result = await dateWiseFileSearchProcessGraphWithUser(processRangeStart, processRangeEnd, key, user);
+            console.log(result);
+            return res.status(200).json(result);
+        }
+        if (processRangeStart == undefined && processRangeEnd == undefined && user == undefined && key == undefined) {
+            const result = await completionDateWiseProcessGraph(completionRangeStart, completionRangeEnd);
+            console.log(result);
+            return res.status(200).json(result);
+        }
+        if (processRangeStart == undefined && processRangeEnd == undefined && key == undefined) {
+            const result = await completionDateWiseProcessGraphWithUser(completionRangeStart, completionRangeEnd, user);
+            console.log(result);
+            return res.status(200).json(result);
+        }
+        if (processRangeStart == undefined && processRangeEnd == undefined && user == undefined) {
+            const result = await completionDateWiseFileSearchProcessGraph(completionRangeStart, completionRangeEnd, key);
+            console.log(result);
+            return res.status(200).json(result);
+        }
+        if (processRangeStart == undefined && processRangeEnd == undefined) {
+            const result = await completionDateWiseFileSearchProcessGraphWithUser(completionRangeStart, completionRangeEnd, key, user);
+            console.log(result);
+            return res.status(200).json(result);
+        }
 
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ error: err.message });
-    }
-}
-
-const searchgraphDefDayOneProcess = async (req, res) => {
-    try {
-
-        const startDate = new Date(req.query.startingDate);
-        const endDate = new Date(req.query.endingDate);
-        const key = req.query.key; 
-        const result = await RawData.aggregate([
-            {
-                $match: {
-                    "process.endTime": { $gte: startDate, $lte: endDate },
-                },
-            },
-            {
-                $match: {
-                    filename: { $regex: `^${key}`, $options: 'i' } 
-                }
-            },
-            {
-                $unwind: "$process",
-            },
-            {
-                $group: {
-                    _id: {
-                        date: { $dateToString: { format: "%Y-%m-%d", date: "$process.endTime" } },
-                        processName: "$process.processName",
-                    },
-                    totalPageCount: { $sum: "$process.page_count" },
-                    totalEfficiency: {
-                        $sum: {
-                            $divide: [
-                                { $multiply: ["$process.page_count", 2.4] },
-                                "$process.process_productive_time",
-                            ],
-                        },
-                    },
-                    filenames: { $addToSet: "$filename" },
-                },
-            },
-            {
-                $group: {
-                    _id: "$_id.date",
-                    data: {
-                        $push: {
-                            processName: "$_id.processName",
-                            // efficiency: { $avg: "$totalEfficiency" },
-                            efficiency: "$totalEfficiency" ,
-                            pageCount: "$totalPageCount",
-                            filenames: "$filenames",
-                            workbookCount: { $sum: { $size: "$filenames" } },
-                        },
-                    },
-
-                },
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: "$_id",
-                    data: 1,
-                },
-            },
-            {
-                $sort: { date: 1 },
-            },
-        ]);
-
-
-        res.json(result)
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ error: err.message });
-    }
-}
-
-const searchgraphDefDayOneProcessUser = async (req, res) => {
-    try {
-        const startDate = new Date(req.query.startingDate);
-        const endDate = new Date(req.query.endingDate);
-        const user = req.query.username;
-        const key = req.query.key; 
-        const result = await RawData.aggregate([
-            {
-                $match: {
-                    "process.endTime": { $gte: startDate, $lte: endDate },
-                    "process.user": user
-                }
-            },
-            {
-                $match: {
-                    filename: { $regex: `^${key}`, $options: 'i' } 
-                }
-            },
-            {
-                $unwind: "$process"
-            },
-            {
-                $group: {
-                    _id: {
-                        date: { $dateToString: { format: "%Y-%m-%d", date: "$process.endTime" } },
-                        processName: "$process.processName"
-                    },
-                    totalPageCount: { $sum: "$process.page_count" },
-                    totalEfficiency: {
-                        $sum: {
-                            $divide: [
-                                { $multiply: ["$process.page_count", 2.4] },
-                                "$process.process_productive_time"
-                            ]
-                        }
-                    },
-                    filenames: { $addToSet: "$filename" },
-                }
-            },
-            {
-                $group: {
-                    _id: "$_id.date",
-                    data: {
-                        $push: {
-                            processName: "$_id.processName",
-                            // efficiency: { $avg: "$totalEfficiency" },
-                            efficiency: "$totalEfficiency" ,
-                            pageCount: "$totalPageCount",
-                            filenames: "$filenames",
-                            workbookCount: { $sum: { $size: "$filenames" } },
-                        }
-                    },
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: "$_id",
-                    data: 1
-                }
-            },
-            {
-                $sort: { date: 1 }
-            }
-        ])
-        res.json(result)
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ error: err.message });
-    }
-}
-
-const filecompletionFilterGraphOne = async (req, res) => {
-    try {
-        const startDate = new Date(req.query.startingDate);
-        const endDate = new Date(req.query.endingDate);
-        
-
-        const result = await RawData.aggregate([
-            {
-                $unwind: '$process'
-            },
-            {
-                $match: {
-                    'completion_Date': {
-                        $gte: startDate,
-                        $lte: endDate
-                    }
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        date: { $dateToString: { format: '%Y-%m-%d', date: '$completion_Date' } },
-                    },
-                    pageCount: { $sum: '$process.page_count' },
-                    processes: { $push: '$process' },
-                    filenames: { $addToSet: '$filename' },
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: '$_id.date',
-                    efficiency: {
-                        $divide: [
-                            { $multiply: ['$pageCount', 2.4] },
-                            { $sum: '$processes.process_productive_time' }
-                        ]
-                    },
-                    pageCount: 1,
-                    filenames: 1,
-                }
-            },
-            {
-                $project: {
-                    date: 1,
-                    efficiency: {
-                        $divide: [
-                            { $trunc: { $multiply: ['$efficiency', 100] } },
-                            100
-                        ]
-                    },
-                    pageCount: 1,
-                    filenames: 1,
-                    workbookCount: { $size: '$filenames' },
-                }
-            },
-            {
-                $sort: {
-                    date: 1
-                }
-            }
-        ]);
-        res.json(result);
-
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ error: err.message });
-    }
-}
-
-const filecompletionFilterGraphOneUser = async (req, res) => {
-    try {
-        const startDate = new Date(req.query.startingDate);
-        const endDate = new Date(req.query.endingDate);
-        
-        const user = req.query.username;
-        const result = await RawData.aggregate([
-            {
-                $unwind: '$process'
-            },
-            {
-                $match: {
-                    'completion_Date': {
-                        $gte: startDate,
-                        $lte: endDate
-                    },
-                    "process.user":user
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        date: { $dateToString: { format: '%Y-%m-%d', date: '$completion_Date' } },
-                    },
-                    pageCount: { $sum: '$process.page_count' },
-                    processes: { $push: '$process' },
-                    filenames: { $addToSet: '$filename' },
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: '$_id.date',
-                    efficiency: {
-                        $divide: [
-                            { $multiply: ['$pageCount', 2.4] },
-                            { $sum: '$processes.process_productive_time' }
-                        ]
-                    },
-                    pageCount: 1,
-                    filenames: 1,
-                }
-            },
-            {
-                $project: {
-                    date: 1,
-                    efficiency: {
-                        $divide: [
-                            { $trunc: { $multiply: ['$efficiency', 100] } },
-                            100
-                        ]
-                    },
-                    pageCount: 1,
-                    filenames: 1,
-                    workbookCount: { $size: '$filenames' },
-                }
-            },
-            {
-                $sort: {
-                    date: 1
-                }
-            }
-        ]);
-        res.json(result);
-
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ error: err.message });
-    }
-}
-
-const completiongraphDefDayOneProcess = async (req, res) => {
-    try {
-
-        const startDate = new Date(req.query.startingDate);
-        const endDate = new Date(req.query.endingDate);
-        
-
-        const result = await RawData.aggregate([
-            {
-                $match: {
-                    "completion_Date": { $gte: startDate, $lte: endDate },
-                },
-            },
-            {
-                $unwind: "$process",
-            },
-            {
-                $group: {
-                    _id: {
-                        date: { $dateToString: { format: "%Y-%m-%d", date: "$completion_Date" } },
-                        processName: "$process.processName",
-                    },
-                    totalPageCount: { $sum: "$process.page_count" },
-                    totalEfficiency: {
-                        $sum: {
-                            $divide: [
-                                { $multiply: ["$process.page_count", 2.4] },
-                                "$process.process_productive_time",
-                            ],
-                        },
-                    },
-                    filenames: { $addToSet: "$filename" },
-                },
-            },
-            {
-                $group: {
-                    _id: "$_id.date",
-                    data: {
-                        $push: {
-                            processName: "$_id.processName",
-                            // efficiency: { $avg: "$totalEfficiency" },
-                            efficiency: "$totalEfficiency" ,
-                            pageCount: "$totalPageCount",
-                            filenames: "$filenames",
-                            workbookCount: { $sum: { $size: "$filenames" } },
-                        },
-                    },
-
-                },
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: "$_id",
-                    data: 1,
-                },
-            },
-            {
-                $sort: { date: 1 },
-            },
-        ]);
-
-
-        res.json(result)
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ error: err.message });
-    }
-}
-
-const completiongraphDefDayOneProcessUser = async (req, res) => {
-    try {
-        const startDate = new Date(req.query.startingDate);
-        const endDate = new Date(req.query.endingDate);
-        const user = req.query.username;
-        
-        const result = await RawData.aggregate([
-            {
-                $match: {
-                    "completion_Date": { $gte: startDate, $lte: endDate },
-                    "process.user": user
-                }
-            },
-            {
-                $unwind: "$process"
-            },
-            {
-                $group: {
-                    _id: {
-                        date: { $dateToString: { format: "%Y-%m-%d", date: "$completion_Date" } },
-                        processName: "$process.processName"
-                    },
-                    totalPageCount: { $sum: "$process.page_count" },
-                    totalEfficiency: {
-                        $sum: {
-                            $divide: [
-                                { $multiply: ["$process.page_count", 2.4] },
-                                "$process.process_productive_time"
-                            ]
-                        }
-                    },
-                    filenames: { $addToSet: "$filename" },
-                }
-            },
-            {
-                $group: {
-                    _id: "$_id.date",
-                    data: {
-                        $push: {
-                            processName: "$_id.processName",
-                            // efficiency: { $avg: "$totalEfficiency" },
-                            efficiency: "$totalEfficiency" ,
-                            pageCount: "$totalPageCount",
-                            filenames: "$filenames",
-                            workbookCount: { $sum: { $size: "$filenames" } },
-                        }
-                    },
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: "$_id",
-                    data: 1
-                }
-            },
-            {
-                $sort: { date: 1 }
-            }
-        ])
-        res.json(result)
     } catch (err) {
         console.log(err.message);
         res.status(500).json({ error: err.message });
@@ -1097,19 +281,8 @@ const completiongraphDefDayOneProcessUser = async (req, res) => {
 }
 
 module.exports = {
-    insertData,
     addData,
     getUsers,
-    graphDefDayOne,
-    graphDefDayOneUser,
-    graphDefDayOneProcess,
-    graphDefDayOneProcessUser,
-    fileSearchFilterGraphOne,
-    fileSearchFilterGraphOneUser,
-    searchgraphDefDayOneProcess,
-    searchgraphDefDayOneProcessUser,
-    filecompletionFilterGraphOne,
-    filecompletionFilterGraphOneUser,
-    completiongraphDefDayOneProcess,
-    completiongraphDefDayOneProcessUser
+    getGraphOne,
+    getGraphTwo
 }

@@ -15,7 +15,9 @@ import {
     FILE_SEARCH_GRAPH_ONE,
     FILE_SEARCH_GRAPH_ONE_USER,
     FILE_SEARCH_GRAPH_TWO,
-    FILE_SEARCH_GRAPH_TWO_USER
+    FILE_SEARCH_GRAPH_TWO_USER,
+    GGRAPH_ONE,
+    GGRAPH_TWO
 } from '../../utils/API';
 import GraphCompOne from '../../components/Charts/FirstGraph'
 import GraphCompTwo from '../../components/Charts/SecondGraph'
@@ -32,8 +34,8 @@ function Upload() {
     const [endDate, setEndDate] = useState('2023-06-30');
     const [users, setUsers] = useState([]);
     const [user, setUSer] = useState('');
-    // const [key, setkey] = useState('')
-    const key = useSelector(state=>state.name)
+    const [key, setkey] = useState('')
+    // const key = useSelector(state=>state.name)
     const [fileData, setFileData] = useState([])
     const [flag, setFlag] = useState(false)
     const [showModal, setShowModal] = useState(false);
@@ -52,47 +54,177 @@ function Upload() {
     }, [flag])
 
 
+    // async function getLandingData() {
+    //     if(!selectFilename){
+    //         if (!selectCompletion) {
+    //             if (user === '') {
+    //                 axios.get(`${GRAPH_ONE}?startingDate=${startDate}&endingDate=${endDate}`).then((res) => {
+    //                     setlandingDataOne(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             } else {
+    //                 axios.get(`${GRAPH_ONE_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}`).then((res) => {
+    //                     setlandingDataOne(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             }
+    //         } else {
+    //             if (user === '') {
+    //                 axios.get(`${COMPLETION_DATE_GRAPH_ONE}?startingDate=${startDate}&endingDate=${endDate}`).then((res) => {
+    //                     setlandingDataOne(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             } else {
+    //                 axios.get(`${COMPLETION_DATE_GRAPH_ONE_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}`).then((res) => {
+    //                     setlandingDataOne(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             }
+    //         }
+    //     }else{
+    //         if (!selectCompletion) {
+    //             if (user === '') {
+    //                 axios.get(`${FILE_SEARCH_GRAPH_ONE}?startingDate=${startDate}&endingDate=${endDate}&key=${key}`).then((res) => {
+    //                     setlandingDataOne(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             } else {
+    //                 axios.get(`${FILE_SEARCH_GRAPH_ONE_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}&key=${key}`).then((res) => {
+    //                     setlandingDataOne(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             }
+    //         } else {
+    //             if (user === '') {
+    //                 axios.get(`${FILE_SEARCH_GRAPH_ONE}?startingDate=${startDate}&endingDate=${endDate}&key=${key}`).then((res) => {
+    //                     setlandingDataOne(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             } else {
+    //                 axios.get(`${FILE_SEARCH_GRAPH_ONE_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}&key=${key}`).then((res) => {
+    //                     setlandingDataOne(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             }
+    //         }
+    //     }
+    // }
+
+    // async function processWiseData() {
+    //     if(!selectFilename){
+    //         if (!selectCompletion) {
+    //             if (user === '') {
+    //                 axios.get(`${GRAPH_TWO}?startingDate=${startDate}&endingDate=${endDate}`).then((res) => {
+    //                     setprocessData(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             } else {
+    //                 axios.get(`${GRAPH_TWO_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}`).then((res) => {
+    //                     setprocessData(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             }
+    //         } else {
+    //             if (user === '') {
+    //                 axios.get(`${COMPLETION_DATE_GRAPH_TWO}?startingDate=${startDate}&endingDate=${endDate}`).then((res) => {
+    //                     setprocessData(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             } else {
+    //                 axios.get(`${COMPLETION_DATE_GRAPH_TWO_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}`).then((res) => {
+    //                     setprocessData(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             }
+    //         }
+    //     }else{
+    //         if (!selectCompletion) {
+    //             if (user === '') {
+    //                 axios.get(`${FILE_SEARCH_GRAPH_TWO}?startingDate=${startDate}&endingDate=${endDate}&key=${key}`).then((res) => {
+    //                     setprocessData(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             } else {
+    //                 axios.get(`${FILE_SEARCH_GRAPH_TWO_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}&key=${key}`).then((res) => {
+    //                     setprocessData(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             }
+    //         } else {
+    //             if (user === '') {
+    //                 axios.get(`${FILE_SEARCH_GRAPH_TWO}?startingDate=${startDate}&endingDate=${endDate}&key=${key}`).then((res) => {
+    //                     setprocessData(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             } else {
+    //                 axios.get(`${FILE_SEARCH_GRAPH_TWO_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}&key=${key}`).then((res) => {
+    //                     setprocessData(res.data);
+    //                 }).catch(err => console.log(err.message))
+    //             }
+    //         }
+    //     }
+
+
+    // }
+
     async function getLandingData() {
-        if(!selectFilename){
+        if (!selectFilename) {
             if (!selectCompletion) {
                 if (user === '') {
-                    axios.get(`${GRAPH_ONE}?startingDate=${startDate}&endingDate=${endDate}`).then((res) => {
+                    axios.post(GGRAPH_ONE, {
+                        processRangeStart: startDate,
+                        processRangeEnd: endDate,
+                    }).then((res) => {
                         setlandingDataOne(res.data);
                     }).catch(err => console.log(err.message))
                 } else {
-                    axios.get(`${GRAPH_ONE_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}`).then((res) => {
+                    axios.post(GGRAPH_ONE,{
+                        processRangeStart: startDate,
+                        processRangeEnd: endDate,
+                        user
+                    }).then((res) => {
                         setlandingDataOne(res.data);
                     }).catch(err => console.log(err.message))
                 }
             } else {
                 if (user === '') {
-                    axios.get(`${COMPLETION_DATE_GRAPH_ONE}?startingDate=${startDate}&endingDate=${endDate}`).then((res) => {
+                    axios.post(GGRAPH_ONE,{
+                        completionRangeStart: startDate,
+                        completionRangeEnd: endDate,
+                    }).then((res) => {
                         setlandingDataOne(res.data);
                     }).catch(err => console.log(err.message))
                 } else {
-                    axios.get(`${COMPLETION_DATE_GRAPH_ONE_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}`).then((res) => {
+                    axios.post(GGRAPH_ONE,{
+                        completionRangeStart: startDate,
+                        completionRangeEnd: endDate,
+                        user
+                    }).then((res) => {
                         setlandingDataOne(res.data);
                     }).catch(err => console.log(err.message))
                 }
             }
-        }else{
+        } else {
             if (!selectCompletion) {
                 if (user === '') {
-                    axios.get(`${FILE_SEARCH_GRAPH_ONE}?startingDate=${startDate}&endingDate=${endDate}&key=${key}`).then((res) => {
+                    axios.post(GGRAPH_ONE,{
+                        processRangeStart: startDate,
+                        processRangeEnd: endDate,
+                        key
+                    }).then((res) => {
                         setlandingDataOne(res.data);
                     }).catch(err => console.log(err.message))
                 } else {
-                    axios.get(`${FILE_SEARCH_GRAPH_ONE_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}&key=${key}`).then((res) => {
+                    axios.post(GGRAPH_ONE,{
+                        processRangeStart: startDate,
+                        processRangeEnd: endDate,
+                        user,
+                        key
+                    }).then((res) => {
                         setlandingDataOne(res.data);
                     }).catch(err => console.log(err.message))
                 }
             } else {
                 if (user === '') {
-                    axios.get(`${FILE_SEARCH_GRAPH_ONE}?startingDate=${startDate}&endingDate=${endDate}&key=${key}`).then((res) => {
+                    axios.post(GGRAPH_ONE,{
+                        completionRangeStart: startDate,
+                        completionRangeEnd: endDate,
+                        key
+                    }).then((res) => {
                         setlandingDataOne(res.data);
                     }).catch(err => console.log(err.message))
                 } else {
-                    axios.get(`${FILE_SEARCH_GRAPH_ONE_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}&key=${key}`).then((res) => {
+                    axios.post(GGRAPH_ONE,{
+                        completionRangeStart: startDate,
+                        completionRangeEnd: endDate,
+                        user,
+                        key
+                    }).then((res) => {
                         setlandingDataOne(res.data);
                     }).catch(err => console.log(err.message))
                 }
@@ -101,55 +233,84 @@ function Upload() {
     }
 
     async function processWiseData() {
-        if(!selectFilename){
+        if (!selectFilename) {
             if (!selectCompletion) {
                 if (user === '') {
-                    axios.get(`${GRAPH_TWO}?startingDate=${startDate}&endingDate=${endDate}`).then((res) => {
+                    axios.post(GGRAPH_TWO, {
+                        processRangeStart: startDate,
+                        processRangeEnd: endDate,
+                    }).then((res) => {
                         setprocessData(res.data);
                     }).catch(err => console.log(err.message))
                 } else {
-                    axios.get(`${GRAPH_TWO_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}`).then((res) => {
+                    axios.post(GGRAPH_TWO,{
+                        processRangeStart: startDate,
+                        processRangeEnd: endDate,
+                        user
+                    }).then((res) => {
                         setprocessData(res.data);
                     }).catch(err => console.log(err.message))
                 }
             } else {
                 if (user === '') {
-                    axios.get(`${COMPLETION_DATE_GRAPH_TWO}?startingDate=${startDate}&endingDate=${endDate}`).then((res) => {
+                    axios.post(GGRAPH_TWO,{
+                        completionRangeStart: startDate,
+                        completionRangeEnd: endDate,
+                    }).then((res) => {
                         setprocessData(res.data);
                     }).catch(err => console.log(err.message))
                 } else {
-                    axios.get(`${COMPLETION_DATE_GRAPH_TWO_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}`).then((res) => {
+                    axios.post(GGRAPH_TWO,{
+                        completionRangeStart: startDate,
+                        completionRangeEnd: endDate,
+                        user
+                    }).then((res) => {
                         setprocessData(res.data);
                     }).catch(err => console.log(err.message))
                 }
             }
-        }else{
+        } else {
             if (!selectCompletion) {
                 if (user === '') {
-                    axios.get(`${FILE_SEARCH_GRAPH_TWO}?startingDate=${startDate}&endingDate=${endDate}&key=${key}`).then((res) => {
+                    axios.post(GGRAPH_TWO,{
+                        processRangeStart: startDate,
+                        processRangeEnd: endDate,
+                        key
+                    }).then((res) => {
                         setprocessData(res.data);
                     }).catch(err => console.log(err.message))
                 } else {
-                    axios.get(`${FILE_SEARCH_GRAPH_TWO_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}&key=${key}`).then((res) => {
+                    axios.post(GGRAPH_TWO,{
+                        processRangeStart: startDate,
+                        processRangeEnd: endDate,
+                        user,
+                        key
+                    }).then((res) => {
                         setprocessData(res.data);
                     }).catch(err => console.log(err.message))
                 }
             } else {
                 if (user === '') {
-                    axios.get(`${FILE_SEARCH_GRAPH_TWO}?startingDate=${startDate}&endingDate=${endDate}&key=${key}`).then((res) => {
+                    axios.post(GGRAPH_TWO,{
+                        completionRangeStart: startDate,
+                        completionRangeEnd: endDate,
+                        key
+                    }).then((res) => {
                         setprocessData(res.data);
                     }).catch(err => console.log(err.message))
                 } else {
-                    axios.get(`${FILE_SEARCH_GRAPH_TWO_USER}?startingDate=${startDate}&endingDate=${endDate}&username=${user}&key=${key}`).then((res) => {
+                    axios.post(GGRAPH_TWO,{
+                        completionRangeStart: startDate,
+                        completionRangeEnd: endDate,
+                        user,
+                        key
+                    }).then((res) => {
                         setprocessData(res.data);
                     }).catch(err => console.log(err.message))
                 }
             }
         }
-        
-
     }
-
 
     async function getAllUsers() {
         axios.get(LIST_USERS).then((res) => {
@@ -199,10 +360,10 @@ function Upload() {
     }
 
     function handleFilenameChange(e) {
-        // setkey(e.target.value);
-        dispatch(setFileName(e.target.value))
+        setkey(e.target.value);
+        // dispatch(setFileName(e.target.value))
         console.log(key);
-        if(key==='') setselectFilename(true)
+        if (key === '') setselectFilename(true)
 
         else setselectFilename(false)
         setFlag(prev => !prev);
