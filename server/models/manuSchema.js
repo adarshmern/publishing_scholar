@@ -31,7 +31,6 @@ const processSchema = mongoose.Schema({
     },
     process_estimated_time:Number,
     process_target_pages:Number,
-    page_count:Number,
     efficiency: {
         type: Number
     }

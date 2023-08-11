@@ -14,6 +14,8 @@ const Filter = ({
     handleDateFilter,
     setStartDate,
     setEndDate,
+    selectCompletion,
+    user
 }) => {
 
 
@@ -59,7 +61,7 @@ const Filter = ({
                             id='username'
                             onChange={(e) => handleuserchange(e)}
                         >
-                            <option value=''>default graph</option>
+                            <option value={user}/>
                             {users.map((username, index) => (
                                 <option key={index} value={username}>
                                     {username}
@@ -83,7 +85,7 @@ const Filter = ({
                                     type='checkbox'
                                     style={{ height: '30px' }}
                                     name='checkbox'
-                                    value='value'
+                                    checked={selectCompletion} 
                                     onChange={handleDateFilter}
                                 />
                                 Filter by Completion Date

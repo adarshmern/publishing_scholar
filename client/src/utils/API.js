@@ -34,4 +34,6 @@ export const FILE_SEARCH_GRAPH_TWO_USER='/searchprocessuser'
 export const GGRAPH_ONE='/graphOne'
 export const GGRAPH_TWO='/graphTwo'
 
+export const GRAPH='/graph'
+
 

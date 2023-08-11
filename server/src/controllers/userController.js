@@ -1,21 +1,4 @@
-const {
-    dateWiseGraph,
-    dateWiseGraphWithUser,
-    dateWiseProcessGraph,
-    dateWiseProcessGraphWithUser,
-    dateWiseFileSearchGraph,
-    dateWiseFileSearchGraphWithUser,
-    dateWiseFileSearchProcessGraph,
-    dateWiseFileSearchProcessGraphWithUser,
-    completionDateWiseGraph,
-    completionDateWiseGraphWithUser,
-    completionDateWiseProcessGraphWithUser,
-    completionDateWiseProcessGraph,
-    completionDateWiseFileSearchGraph,
-    completionDateWiseFileSearchGraphWithUser,
-    completionDateWiseFileSearchProcessGraph,
-    completionDateWiseFileSearchProcessGraphWithUser
-} = require('../../helpers/userHelper');
+const { efficiencyGraphOne, efficiencyGraphTwo } = require('../../helpers/pubskolerHelper');
 const RawData = require('../../models/manuSchema');
 
 function timeToMinutes(timeString) {
@@ -23,12 +6,13 @@ function timeToMinutes(timeString) {
     return hours * 60 + minutes + seconds / 60;
 }
 
+
 function calculateEfficiency(standardPages, standardTimeMinutes, actualPages, actualTimeMinutes) {
     const standardRate = standardPages / standardTimeMinutes;
     const actualRate = actualPages / actualTimeMinutes;
     const efficiency = (actualRate / standardRate);
 
-    return efficiency;
+    return efficiency*100;
 }
 
 const addData = async (req, res) => {
@@ -79,7 +63,6 @@ const addData = async (req, res) => {
             process_total_time: 0,
             process_estimated_time: 480,
             process_target_pages: 200,
-            page_count: pg_count,
             duration: new Date(),
             efficiency: 0,
         };
@@ -100,7 +83,6 @@ const addData = async (req, res) => {
             process_total_time: 0,
             process_estimated_time: 480,
             process_target_pages: 150,
-            page_count: pg_count,
             duration: new Date(),
             efficiency: 0,
         };
@@ -113,19 +95,6 @@ const addData = async (req, res) => {
 
 
         processArray.push(newCE);
-
-        // const newEPR = {
-        //     processName: 'EPR',
-        //     user: epr_by,
-        //     startTime: new Date(`${epr_dt} ${epr_tm}`),
-        //     endTime: new Date(`${epr_edt} ${epr_et}`),
-        //     duration: new Date(),
-        //     efficiency: 0,
-        // };
-        // newEPR.duration = new Date(newEPR.endTime) - new Date(newEPR.startTime);
-        // newEPR.efficiency = (((pg_count / (200 / 480)) / (newEPR.duration / 60000)) * 100).toFixed(2);
-        // tTime += newEPR.duration;
-        // processArray.push(newEPR);
         if (edited_book_count === '-') {
             edited_book_count = 0;
         }
@@ -177,112 +146,28 @@ const getUsers = async (req, res) => {
 }
 
 
-const getGraphOne = async (req, res) => {
-    try {
-        const { processRangeStart, processRangeEnd, completionRangeStart, completionRangeEnd, user, key } = req.body;
-        console.log(req.body);
-        console.log(processRangeStart, processRangeEnd, completionRangeStart, completionRangeEnd, user, key);
-        if (completionRangeStart == undefined && completionRangeEnd == undefined && user == undefined && key == undefined) {
-            const result = await dateWiseGraph(processRangeStart, processRangeEnd);
-            console.log('hi', result);
-            return res.status(200).json(result);
-        }
-        if (completionRangeStart == undefined && completionRangeEnd == undefined && key == undefined) {
-            const result = await dateWiseGraphWithUser(processRangeStart, processRangeEnd, user);
-            console.log(result);
-            return res.status(200).json(result);
-        }
-        if (completionRangeStart == undefined && completionRangeEnd == undefined && user == undefined) {
-            const result = await dateWiseFileSearchGraph(processRangeStart, processRangeEnd, key);
-            console.log(result);
-            return res.status(200).json(result);
-        }
-        if (completionRangeStart == undefined && completionRangeEnd == undefined) {
-            const result = await dateWiseFileSearchGraphWithUser(processRangeStart, processRangeEnd, key, user);
-            console.log(result);
-            return res.status(200).json(result);
-        }
-        if (processRangeStart == undefined && processRangeEnd == undefined && user == undefined && key == undefined) {
-            const result = await completionDateWiseGraph(completionRangeStart, completionRangeEnd);
-            console.log(result);
-            return res.status(200).json(result);
-        }
-        if (processRangeStart == undefined && processRangeEnd == undefined && key == undefined) {
-            const result = await completionDateWiseGraphWithUser(completionRangeStart, completionRangeEnd, user);
-            console.log('hj', result);
-            return res.status(200).json(result);
-        }
-        if (processRangeStart == undefined && processRangeEnd == undefined && user == undefined) {
-            const result = await completionDateWiseFileSearchGraph(completionRangeStart, completionRangeEnd, key);
-            console.log(result);
-            return res.status(200).json(result);
-        }
-        if (processRangeStart == undefined && processRangeEnd == undefined) {
-            const result = await completionDateWiseFileSearchGraphWithUser(completionRangeStart, completionRangeEnd, key, user);
-            console.log(result);
-            return res.status(200).json(result);
-        }
 
+const getAllGraphs=async(req,res)=>{
+    try {
+        console.log(req.body);
+        if(req.body.type=='normal'){
+            delete req.body.type;
+            const result =await efficiencyGraphOne(req.body);
+            return res.status(200).json(result);
+        }else{
+            delete req.body.type;
+            const result =await efficiencyGraphTwo(req.body);
+            return res.status(200).json(result);
+        }
     } catch (err) {
         console.log(err.message);
         res.status(500).json({ error: err.message });
     }
 }
 
-const getGraphTwo = async (req, res) => {
-    try {
-        const { processRangeStart, processRangeEnd, completionRangeStart, completionRangeEnd, user, key } = req.body;
-        console.log(req.body);
-        if (completionRangeStart == undefined && completionRangeEnd == undefined && user == undefined && key == undefined) {
-            const result = await dateWiseProcessGraph(processRangeStart, processRangeEnd);
-            console.log('hello', result);
-            return res.status(200).json(result);
-        }
-        if (completionRangeStart == undefined && completionRangeEnd == undefined && key == undefined) {
-            const result = await dateWiseProcessGraphWithUser(processRangeStart, processRangeEnd, user);
-            console.log(result);
-            return res.status(200).json(result);
-        }
-        if (completionRangeStart == undefined && completionRangeEnd == undefined && user == undefined) {
-            const result = await dateWiseFileSearchProcessGraph(processRangeStart, processRangeEnd, key);
-            console.log(result);
-            return res.status(200).json(result);
-        }
-        if (completionRangeStart == undefined && completionRangeEnd == undefined) {
-            const result = await dateWiseFileSearchProcessGraphWithUser(processRangeStart, processRangeEnd, key, user);
-            console.log(result);
-            return res.status(200).json(result);
-        }
-        if (processRangeStart == undefined && processRangeEnd == undefined && user == undefined && key == undefined) {
-            const result = await completionDateWiseProcessGraph(completionRangeStart, completionRangeEnd);
-            console.log(result);
-            return res.status(200).json(result);
-        }
-        if (processRangeStart == undefined && processRangeEnd == undefined && key == undefined) {
-            const result = await completionDateWiseProcessGraphWithUser(completionRangeStart, completionRangeEnd, user);
-            console.log(result);
-            return res.status(200).json(result);
-        }
-        if (processRangeStart == undefined && processRangeEnd == undefined && user == undefined) {
-            const result = await completionDateWiseFileSearchProcessGraph(completionRangeStart, completionRangeEnd, key);
-            console.log(result);
-            return res.status(200).json(result);
-        }
-        if (processRangeStart == undefined && processRangeEnd == undefined) {
-            const result = await completionDateWiseFileSearchProcessGraphWithUser(completionRangeStart, completionRangeEnd, key, user);
-            console.log(result);
-            return res.status(200).json(result);
-        }
-
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ error: err.message });
-    }
-}
 
 module.exports = {
     addData,
     getUsers,
-    getGraphOne,
-    getGraphTwo
+    getAllGraphs
 }
