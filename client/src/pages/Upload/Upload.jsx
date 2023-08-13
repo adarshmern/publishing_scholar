@@ -57,7 +57,7 @@ function Upload() {
 
     async function getLandingData() {
         const body={
-            type:'normal',
+            type:'one',
         }
         if(selectCompletion){
             body['completionRangeStart']=startDate
@@ -80,7 +80,7 @@ function Upload() {
 
     async function processWiseData() {
         const body={
-            type:'ikomet',
+            type:'two',
         }
         if(selectCompletion){
             body['completionRangeStart']=startDate

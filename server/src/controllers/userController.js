@@ -150,15 +150,15 @@ const getUsers = async (req, res) => {
 const getAllGraphs=async(req,res)=>{
     try {
         console.log(req.body);
-        if(req.body.type=='normal'){
+        if(req.body.type=='one'){
             delete req.body.type;
             const result =await efficiencyGraphOne(req.body);
             return res.status(200).json(result);
-        }else{
+        }else if(req.body.type=='two'){
             delete req.body.type;
             const result =await efficiencyGraphTwo(req.body);
             return res.status(200).json(result);
-        }
+        }else return res.status(400).json({message:'invalid type'})
     } catch (err) {
         console.log(err.message);
         res.status(500).json({ error: err.message });
