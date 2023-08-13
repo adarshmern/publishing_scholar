@@ -1,4 +1,4 @@
-const { efficiencyGraphOne, efficiencyGraphTwo } = require('../../helpers/pubskolerHelper');
+const { efficiencyGraphOne, efficiencyGraphTwo, getDataOne, getDataTwo } = require('../../helpers/pubskolerHelper');
 const RawData = require('../../models/manuSchema');
 
 function timeToMinutes(timeString) {
@@ -149,7 +149,6 @@ const getUsers = async (req, res) => {
 
 const getAllGraphs=async(req,res)=>{
     try {
-        console.log(req.body);
         if(req.body.type=='one'){
             delete req.body.type;
             const result =await efficiencyGraphOne(req.body);
@@ -165,9 +164,28 @@ const getAllGraphs=async(req,res)=>{
     }
 }
 
+const getBothGraphs=async(req,res)=>{
+    try {
+        console.log(req.body);
+        if(req.body.type=='one'){
+            delete req.body.type;
+            const result =await getDataOne(req.body);
+            return res.status(200).json(result);
+        }else if(req.body.type=='two'){
+            delete req.body.type;
+            const result =await getDataTwo(req.body);
+            return res.status(200).json(result);
+        }else return res.status(400).json({message:'invalid type'})
+    } catch (err) {
+        console.log(err.message);
+        res.status(500).json({ error: err.message });
+    }
+}
+
 
 module.exports = {
     addData,
     getUsers,
-    getAllGraphs
+    getAllGraphs,
+    getBothGraphs
 }

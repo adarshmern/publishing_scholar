@@ -3,7 +3,8 @@ const Manuscript = require('../../models/manuSchema')
 const {
   addData,
   getUsers,
-  getAllGraphs
+  getAllGraphs,
+  getBothGraphs
 } = require('../controllers/userController');
 const router = Router();
 
@@ -15,6 +16,8 @@ router.get('/users', getUsers);
 
 
 router.post('/graph', getAllGraphs);
+
+router.post('/getData',getBothGraphs);
 
 router.get('/getsomething', async (req, res) => {
   try {
