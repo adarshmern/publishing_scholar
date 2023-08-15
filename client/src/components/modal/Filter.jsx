@@ -15,13 +15,13 @@ const Filter = ({
     setStartDate,
     setEndDate,
     selectCompletion,
-    user
+    user,
+    keyInput
 }) => {
 
 
-  
 
-    
+
 
     function handleClose(e) {
         if (e.target.id === 'editModal') {
@@ -38,6 +38,7 @@ const Filter = ({
     return (
         <div id='editModal' onClick={handleClose} className='modal'>
             <div className='modal-content'>
+                <button onClick={()=>location.reload()}>default graph</button>
                 <form onSubmit={handleSubmit}>
                     <div className='row'>
                         <div className='col-6'>
@@ -59,9 +60,10 @@ const Filter = ({
                         <select
                             name='username'
                             id='username'
+                            
                             onChange={(e) => handleuserchange(e)}
                         >
-                            <option value={user}/>
+                            <option selected>{user}</option>
                             {users.map((username, index) => (
                                 <option key={index} value={username}>
                                     {username}
@@ -70,12 +72,13 @@ const Filter = ({
                         </select>
                     </div>
                     <div className='row'>
-                        
+
                         <div className='col'> <input
-                                type='text'
-                                placeholder='type starting characters'
-                                onChange={e => handleFilenameChange(e)}
-                            />
+                            type='text'
+                            placeholder='type filenaem'
+                            value={keyInput}
+                            onChange={e => handleFilenameChange(e)}
+                        />
                         </div>
                     </div>
                     <div className='row'>
@@ -85,7 +88,7 @@ const Filter = ({
                                     type='checkbox'
                                     style={{ height: '30px' }}
                                     name='checkbox'
-                                    checked={selectCompletion} 
+                                    checked={selectCompletion}
                                     onChange={handleDateFilter}
                                 />
                                 Filter by Completion Date

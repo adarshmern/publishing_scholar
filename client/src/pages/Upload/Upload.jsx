@@ -123,7 +123,8 @@ function Upload() {
                 const worksheet = workbook.Sheets[sheetName];
                 const json = XLSX.utils.sheet_to_json(worksheet);
                 json.forEach(async (elem) => {
-                    await axios.post(INSERT_DATA, elem).then(() => {
+                    console.log(elem);
+                    axios.post(INSERT_DATA, elem).then(() => {
                     }).catch((err) => {
                         console.log(err.message);
                     })
@@ -148,15 +149,25 @@ function Upload() {
         setShowModal(false);
     }
 
+    // function handleFilenameChange(e) {
+    //     setkey(e.target.value);
+    //     // dispatch(setFileName(e.target.value))
+    //     console.log(key);
+    //     if (key === '') setselectFilename(true)
+    //     else setselectFilename(false)
+    //     setFlag(prev => !prev);
+    // }
+
     function handleFilenameChange(e) {
         setkey(e.target.value);
-        // dispatch(setFileName(e.target.value))
-        console.log(key);
-        if (key === '') setselectFilename(true)
-
-        else setselectFilename(false)
+        if (e.target.value === '') {
+            setselectFilename(true);
+        } else {
+            setselectFilename(false);
+        }
         setFlag(prev => !prev);
     }
+    
 
     function handleDateFilter() {
         setselectCompletion(prev => !prev)
@@ -197,6 +208,7 @@ function Upload() {
                 handleDateFilter={handleDateFilter}
                 selectCompletion={selectCompletion}
                 user={user}
+                keyInput={key}
             />}
             <br />
             {user ? <h4>Efficiencies per Date For {user}</h4> : <h4>Efficiencies per Date </h4>}

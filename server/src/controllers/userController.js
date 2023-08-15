@@ -1,5 +1,6 @@
-const { efficiencyGraphOne, efficiencyGraphTwo, getDataOne, getDataTwo } = require('../../helpers/pubskolerHelper');
+const { efficiencyGraphOne, efficiencyGraphTwo, getDataOne, getDataTwo, addSheetData } = require('../../helpers/pubskolerHelper');
 const RawData = require('../../models/manuSchema');
+const Sheet = require('../../models/sheetSchema')
 
 function timeToMinutes(timeString) {
     const [hours, minutes, seconds] = timeString.split(":").map(Number);
@@ -12,7 +13,7 @@ function calculateEfficiency(standardPages, standardTimeMinutes, actualPages, ac
     const actualRate = actualPages / actualTimeMinutes;
     const efficiency = (actualRate / standardRate);
 
-    return efficiency*100;
+    return efficiency * 100;
 }
 
 const addData = async (req, res) => {
@@ -53,12 +54,14 @@ const addData = async (req, res) => {
         } = req.body
         const processArray = [];
         let tTime = 0;
-
+// console.log(new Date(`${pe_dt} ${pe_tm}`));
+// new Date(pe_edt)
         const newPE = {
             processName: 'Pre Editing',
             user: pre_editing_by,
             startTime: new Date(`${pe_dt} ${pe_tm}`),
-            endTime: new Date(`${pe_edt} ${pe_et}`),
+            // endTime: new Date(`${pe_edt} ${pe_et}`),
+            endTime: new Date(pe_edt),
             process_productive_time: 0,
             process_total_time: 0,
             process_estimated_time: 480,
@@ -78,7 +81,8 @@ const addData = async (req, res) => {
             processName: 'Copy Editing',
             user: copy_editing_by,
             startTime: new Date(`${ce_dt} ${ce_tm}`),
-            endTime: new Date(`${ce_edt} ${ce_et}`),
+            // endTime: new Date(`${ce_edt} ${ce_et}`),
+            endTime: new Date(ce_edt),
             process_productive_time: 0,
             process_total_time: 0,
             process_estimated_time: 480,
@@ -147,45 +151,61 @@ const getUsers = async (req, res) => {
 
 
 
-const getAllGraphs=async(req,res)=>{
+const getAllGraphs = async (req, res) => {
     try {
-        if(req.body.type=='one'){
+        if (req.body.type == 'one') {
             delete req.body.type;
-            const result =await efficiencyGraphOne(req.body);
+            const result = await efficiencyGraphOne(req.body);
             return res.status(200).json(result);
-        }else if(req.body.type=='two'){
+        } else if (req.body.type == 'two') {
             delete req.body.type;
-            const result =await efficiencyGraphTwo(req.body);
+            const result = await efficiencyGraphTwo(req.body);
             return res.status(200).json(result);
-        }else return res.status(400).json({message:'invalid type'})
+        } else return res.status(400).json({ message: 'invalid type' })
     } catch (err) {
         console.log(err.message);
         res.status(500).json({ error: err.message });
     }
 }
 
-const getBothGraphs=async(req,res)=>{
+const getBothGraphs = async (req, res) => {
     try {
         console.log(req.body);
-        if(req.body.type=='one'){
+        if (req.body.type == 'one') {
             delete req.body.type;
-            const result =await getDataOne(req.body);
+            const result = await getDataOne(req.body);
             return res.status(200).json(result);
-        }else if(req.body.type=='two'){
+        } else if (req.body.type == 'two') {
             delete req.body.type;
-            const result =await getDataTwo(req.body);
+            const result = await getDataTwo(req.body);
             return res.status(200).json(result);
-        }else return res.status(400).json({message:'invalid type'})
+        } else return res.status(400).json({ message: 'invalid type' })
     } catch (err) {
         console.log(err.message);
         res.status(500).json({ error: err.message });
     }
 }
 
+const addExcelData = async (req, res) => {
+    try {
+        console.log(req.file);
+        var workbook = xlsx.readFile(req.file.path);
+        var sheet_name_list = workbook.SheetNames;
+        var xlData = xlsx.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
+        xlData.forEach(async (elem) => {
+            await addSheetData(elem);
+        })
+        res.status(200).json('data uploaded')
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json(error.message)
+    }
+}
 
 module.exports = {
     addData,
     getUsers,
     getAllGraphs,
-    getBothGraphs
+    getBothGraphs,
+    addExcelData
 }
